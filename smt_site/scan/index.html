@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Price Check — Sri Murugan Trading</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red:#C41E3A; --red2:#E8294F; --gold:#F5C842;
+  --dark:#080808; --dark2:#111; --dark3:#1a1a1a; --dark4:#222;
+  --white:#fff; --grey:#777; --light:#aaa;
+  --r:20px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  font-family:'Outfit',sans-serif;
+  background:var(--dark);
+  color:var(--white);
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  overflow-x:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 70% 40% at 50% 0%,rgba(196,30,58,0.18) 0%,transparent 60%);
+  pointer-events:none;z-index:0;
+}
+
+/* Header */
+header{
+  position:relative;z-index:10;
+  padding:20px 28px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.logo{display:flex;align-items:center;gap:12px;}
+.logo-icon{
+  width:38px;height:38px;background:var(--red);border-radius:11px;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  box-shadow:0 0 24px rgba(196,30,58,0.45);
+}
+.logo-name{font-size:14px;font-weight:700;line-height:1.3;}
+.logo-sub{font-size:11px;color:var(--grey);}
+.loc-badge{
+  display:flex;align-items:center;gap:8px;
+  background:var(--dark3);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:99px;padding:7px 16px;
+  font-size:13px;font-weight:700;
+}
+.loc-dot{width:8px;height:8px;border-radius:50%;background:var(--red2);}
+.clock{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--grey);}
+
+/* Main */
+main{
+  position:relative;z-index:10;
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:40px 20px;
+}
+
+/* ── IDLE ── */
+#s-idle{display:flex;flex-direction:column;align-items:center;text-align:center;gap:36px;}
+
+.barcode-anim{
+  position:relative;
+  width:120px;height:120px;
+  display:flex;align-items:center;justify-content:center;
+}
+.barcode-anim svg{width:90px;height:90px;}
+.ring{
+  position:absolute;inset:0;
+  border-radius:50%;
+  border:1.5px solid rgba(196,30,58,0.25);
+  animation:ring 2.4s ease-out infinite;
+}
+.ring:nth-child(2){animation-delay:.8s;}
+.ring:nth-child(3){animation-delay:1.6s;}
+@keyframes ring{0%{opacity:.7;transform:scale(1);}100%{opacity:0;transform:scale(1.5);}}
+
+.welcome-text h1{
+  font-size:clamp(30px,6vw,52px);
+  font-weight:900;line-height:1.05;letter-spacing:-1px;
+  margin-bottom:10px;
+}
+.welcome-text h1 em{font-style:normal;color:var(--red2);}
+.welcome-text p{font-size:16px;color:var(--grey);font-weight:400;line-height:1.6;max-width:380px;}
+
+.scan-field{
+  position:relative;width:min(440px,90vw);
+}
+.scan-input{
+  width:100%;padding:18px 24px;
+  font-size:16px;font-family:'Outfit',sans-serif;
+  background:var(--dark3);
+  border:2px solid rgba(255,255,255,0.08);
+  border-radius:var(--r);
+  color:var(--white);outline:none;text-align:center;
+  transition:border .2s,box-shadow .2s;
+  caret-color:var(--red2);
+}
+.scan-input:focus{border-color:var(--red2);box-shadow:0 0 0 4px rgba(232,41,79,0.1);}
+.scan-input::placeholder{color:var(--grey);}
+.ready-pill{
+  margin-top:12px;
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:13px;color:var(--grey);
+}
+.ready-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--red2);
+  animation:blink 1.4s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.15;}}
+
+/* ── LOADING ── */
+#s-loading{display:none;flex-direction:column;align-items:center;gap:18px;}
+.spinner{
+  width:52px;height:52px;
+  border:3px solid rgba(255,255,255,0.08);
+  border-top-color:var(--red2);
+  border-radius:50%;
+  animation:spin .75s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── RESULT ── */
+#s-result{
+  display:none;flex-direction:column;
+  align-items:center;gap:24px;
+  width:min(520px,96vw);
+  animation:up .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes up{from{opacity:0;transform:translateY(28px) scale(.96);}to{opacity:1;transform:none;}}
+
+.result-card{
+  width:100%;
+  background:var(--dark2);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:24px;
+  padding:32px;
+  position:relative;overflow:hidden;
+}
+.result-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--red),var(--red2),var(--gold));
+}
+.r-store{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--grey);margin-bottom:12px;}
+.r-name{font-size:clamp(18px,4vw,26px);font-weight:800;line-height:1.25;margin-bottom:6px;}
+.r-sku{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--grey);margin-bottom:24px;}
+.r-price-wrap{display:flex;align-items:baseline;gap:4px;margin-bottom:6px;}
+.r-sym{font-size:26px;font-weight:700;color:var(--grey);line-height:1;}
+.r-amt{font-size:clamp(56px,14vw,84px);font-weight:900;line-height:1;letter-spacing:-2px;}
+.r-loc{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--grey);}
+
+.btn-again{
+  width:100%;padding:16px;
+  background:var(--red);border:none;border-radius:var(--r);
+  color:#fff;font-size:15px;font-weight:700;font-family:'Outfit',sans-serif;
+  cursor:pointer;transition:all .15s;
+  box-shadow:0 4px 24px rgba(196,30,58,.35);
+}
+.btn-again:hover{background:var(--red2);transform:translateY(-1px);}
+
+/* ── NOT FOUND ── */
+#s-notfound{
+  display:none;flex-direction:column;
+  align-items:center;text-align:center;gap:18px;
+  animation:up .35s ease;
+}
+#s-notfound .icon{font-size:60px;}
+#s-notfound h2{font-size:26px;font-weight:800;}
+#s-notfound p{font-size:14px;color:var(--grey);max-width:300px;line-height:1.6;}
+
+/* Reset bar */
+.reset-bar{position:fixed;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.04);}
+.reset-fill{height:100%;background:var(--red2);transition:width .1s linear;}
+
+/* Footer */
+footer{position:relative;z-index:10;padding:16px 24px;text-align:center;font-size:12px;color:var(--grey);border-top:1px solid rgba(255,255,255,0.04);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🏷</div>
+    <div>
+      <div class="logo-name">Sri Murugan Trading</div>
+      <div class="logo-sub">Price Check</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="loc-badge"><div class="loc-dot"></div><span id="loc-label">Loading…</span></div>
+    <div class="clock" id="clock">--:--</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- IDLE -->
+  <div id="s-idle">
+    <div class="barcode-anim">
+      <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+      <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="80" height="80" rx="20" fill="#1A1A1A"/>
+        <rect x="14" y="22" width="4"  height="36" rx="1.5" fill="#C41E3A"/>
+        <rect x="21" y="22" width="2"  height="36" rx="1"   fill="white" opacity=".7"/>
+        <rect x="26" y="22" width="6"  height="36" rx="1.5" fill="#C41E3A"/>
+        <rect x="35" y="22" width="2"  height="36" rx="1"   fill="white" opacity=".7"/>
+        <rect x="40" y="22" width="4"  height="36" rx="1.5" fill="#C41E3A"/>
+        <rect x="47" y="22" width="5"  height="36" rx="1.5" fill="white" opacity=".7"/>
+        <rect x="55" y="22" width="2"  height="36" rx="1"   fill="#C41E3A"/>
+        <rect x="60" y="22" width="4"  height="36" rx="1.5" fill="white" opacity=".7"/>
+        <rect x="10" y="38" width="60" height="3" rx="1.5" fill="#E8294F" opacity=".85"/>
+      </svg>
+    </div>
+
+    <div class="welcome-text">
+      <h1>Welcome!<br/>Scan to check <em>your price</em></h1>
+      <p>Point your barcode scanner at any product to instantly see the price.</p>
+    </div>
+
+    <div class="scan-field">
+      <input type="text" id="scan-input" class="scan-input"
+        placeholder="Scan barcode here…"
+        autocomplete="off" autocorrect="off" spellcheck="false" autofocus/>
+      <div class="ready-pill"><div class="ready-dot"></div> Ready to scan</div>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div id="s-loading">
+    <div class="spinner"></div>
+    <div style="color:var(--grey);font-size:15px;">Looking up product…</div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="s-result">
+    <div class="result-card">
+      <div class="r-store" id="r-store"></div>
+      <div class="r-name"  id="r-name"></div>
+      <div class="r-sku"   id="r-sku"></div>
+      <div class="r-price-wrap">
+        <div class="r-sym">$</div>
+        <div class="r-amt" id="r-amt">—</div>
+      </div>
+      <div class="r-loc" id="r-loc"></div>
+    </div>
+    <button class="btn-again" onclick="resetToIdle()">↩ Scan Another Product</button>
+  </div>
+
+  <!-- NOT FOUND -->
+  <div id="s-notfound">
+    <div class="icon">🔍</div>
+    <h2>Product not found</h2>
+    <p>We couldn't find a product with that barcode. Please ask a staff member for help.</p>
+    <button class="btn-again" onclick="resetToIdle()" style="width:220px;">↩ Try Again</button>
+  </div>
+
+</main>
+
+<footer>Sri Murugan Trading · Price Check · Prices are subject to change</footer>
+<div class="reset-bar"><div class="reset-fill" id="reset-fill" style="width:100%"></div></div>
+
+<script src="../data.js"></script>
+<script>
+// ── Which location is this page? ──────────────────────────────
+// Detect from URL path: /pc → pc, /cn → cn, /cd → cd, /ep → ep
+const path    = window.location.pathname.toLowerCase();
+const LOC_KEY = path.includes('/cn') ? 'cn'
+              : path.includes('/cd') ? 'cd'
+              : path.includes('/ep') ? 'ep'
+              : 'pc'; // default
+
+// ── Init ──────────────────────────────────────────────────────
+window.addEventListener('load', async () => {
+  // Set location label
+  const locInfo = SMT_LOCATIONS[LOC_KEY];
+  document.getElementById('loc-label').textContent = locInfo.icon + ' ' + locInfo.name;
+  document.title = locInfo.name + ' — Sri Murugan Trading';
+
+  // Load inventory
+  await smtLoadInventory(null);
+
+  // Start clock
+  updateClock();
+  setInterval(updateClock, 10000);
+
+  // Focus input
+  focusInput();
+});
+
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('en-AU', { hour:'2-digit', minute:'2-digit' });
+}
+
+// ── Screens ───────────────────────────────────────────────────
+function show(id) {
+  ['s-idle','s-loading','s-result','s-notfound'].forEach(s => {
+    document.getElementById(s).style.display = 'none';
+  });
+  document.getElementById(id).style.display = 'flex';
+}
+
+let resetTimer, resetInterval;
+const RESET_MS = 12000;
+
+function startReset() {
+  clearTimeout(resetTimer);
+  clearInterval(resetInterval);
+  let rem = RESET_MS;
+  const fill = document.getElementById('reset-fill');
+  fill.style.width = '100%';
+  resetInterval = setInterval(() => {
+    rem -= 100;
+    fill.style.width = Math.max(0, rem / RESET_MS * 100) + '%';
+    if (rem <= 0) clearInterval(resetInterval);
+  }, 100);
+  resetTimer = setTimeout(resetToIdle, RESET_MS);
+}
+
+function resetToIdle() {
+  clearTimeout(resetTimer);
+  clearInterval(resetInterval);
+  document.getElementById('reset-fill').style.width = '100%';
+  document.getElementById('scan-input').value = '';
+  show('s-idle');
+  focusInput();
+}
+
+function focusInput() {
+  setTimeout(() => document.getElementById('scan-input')?.focus(), 80);
+}
+
+// Keep focus on idle screen
+document.addEventListener('click', () => {
+  if (document.getElementById('s-idle').style.display !== 'none') focusInput();
+});
+
+// ── Scan ──────────────────────────────────────────────────────
+const input = document.getElementById('scan-input');
+let scanTimeout;
+
+input.addEventListener('input', () => {
+  clearTimeout(scanTimeout);
+  scanTimeout = setTimeout(doScan, 150);
+});
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { clearTimeout(scanTimeout); doScan(); }
+});
+
+function doScan() {
+  const val = input.value.trim();
+  if (!val) return;
+  input.value = '';
+
+  if (!SMT_LOADED) {
+    alert('Inventory not loaded yet. Please wait a moment and try again.');
+    return;
+  }
+
+  show('s-loading');
+
+  setTimeout(() => {
+    const product = smtFind(val);
+    if (product) {
+      showResult(product);
+    } else {
+      show('s-notfound');
+      startReset();
+    }
+  }, 280);
+}
+
+function showResult(product) {
+  const price = smtPrice(product, LOC_KEY);
+  document.getElementById('r-store').textContent = SMT_STORE;
+  document.getElementById('r-name').textContent  = product[SMT_COLS.name] || 'Unknown Product';
+  document.getElementById('r-sku').textContent   = 'SKU: ' + (product[SMT_COLS.sku] || '—');
+  document.getElementById('r-amt').textContent   = price === '—' ? '—' : price;
+  document.getElementById('r-loc').textContent   = SMT_LOCATIONS[LOC_KEY].name + ' Price';
+  show('s-result');
+  startReset();
+}
+</script>
+</body>
+</html>
